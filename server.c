@@ -48,18 +48,25 @@ int main(int argc, char* agrv[]){
     }else{
         printf("Bind of socket successful\n");
     }
-    socklen_t len = sizeof(client);
-    int connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
     
-    if(connect_fd == -1){
-        syserr("Error connexion with client failed\n");
+    socklen_t len = sizeof(client);
+    
+    if(listen(sock_fd, 10) == 0) {
+        printf("[+]Listening....\n");
+    } else {
+        syserr("[-]Error in binding.\n");
         return 1;
-    }else{
-        printf("connexion with client sucessful");
     }
 
-    while(1){}
+    int connect_fd;
 
+    while(1){
+        connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
+        if(connect_fd < 0) {
+            syserr("error of connexion with client\n");
+        }
+        printf("connexion with client successful\n");
+    }
     return 0;
 }
 

@@ -42,7 +42,7 @@ int main(int argc, char* argv[]){
     server.sin_port = htons(PORT); 
     server.sin_family = AF_INET;
 
-    if(connect(sock_fd, (struct sockaddr*) &server, sizeof(sock_fd)) == -1){
+    if(connect(sock_fd, (struct sockaddr*) &server, sizeof(server)) < 0){
         syserr("Error of connexion with the server\n");
         return 1;
     }else{
