@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <string.h>
 
 #define PORT 8080
 
@@ -26,7 +27,7 @@ void syserr(char* messsage){
 
 int main(int argc, char* agrv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-
+    char buffer[1024];
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
         return 1;
@@ -64,8 +65,23 @@ int main(int argc, char* agrv[]){
         connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
         if(connect_fd < 0) {
             syserr("error of connexion with client\n");
+            return 1;
         }
         printf("connexion with client successful\n");
+    }
+    while(1){
+        printf("j'attend des messages");
+        int r = recv(connect_fd, buffer, 1024, MSG_WAITALL);
+        printf("%d", r);
+        if(strcmp(buffer, "!exit") == 0) {
+            printf("Disconnected");
+            break;
+        } else {
+           // printf("Return error", buffer);
+            strncpy(buffer, "Undefined command", 1024);
+            send(connect_fd, buffer, strlen(buffer), 0);
+            bzero(buffer, sizeof(buffer));
+        }
     }
     return 0;
 }

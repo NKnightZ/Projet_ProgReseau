@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <string.h>
 
 #define PORT 8080 
 
@@ -28,7 +29,7 @@ void syserr(char *message) {
 
 int main(int argc, char* argv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-
+    char buffer[1024];
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
         return 1;
@@ -41,12 +42,19 @@ int main(int argc, char* argv[]){
     server.sin_addr.s_addr = htonl(INADDR_ANY); 
     server.sin_port = htons(PORT); 
     server.sin_family = AF_INET;
-
-    if(connect(sock_fd, (struct sockaddr*) &server, sizeof(server)) < 0){
-        syserr("Error of connexion with the server\n");
-        return 1;
-    }else{
+    
+    int connect_fd;
+            connect_fd = connect(sock_fd, (struct sockaddr*) &server, sizeof(server));
+        if(connect_fd < 0){
+            syserr("Error of connexion with the server\n");
+            return 1;
+        }
         printf("Connexion successful !\n");
+    while(1){
+        // get all words, not only the first
+        scanf("%[^\n]%*c", buffer);  
+        printf("%s\n", buffer);  // mon buffer se remplit bien      
+        send(connect_fd, buffer, strlen(buffer), MSG_CONFIRM);
     }
 
     return 0;
