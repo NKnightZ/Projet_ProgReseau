@@ -17,6 +17,7 @@ struct account{ // <- à mettre au niveau du serveur, le client n'a pas besoin d
     char title[50];
     struct user user_account;
     char description[140]; // for example hotel, market, travel
+    double total;
 };
 
 #endif
