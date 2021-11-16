@@ -1,6 +1,6 @@
 TARGET=client server 
 CC=gcc
-CFLAGS= -Wall 
+CFLAGS= -g -Wall 
 
 all:
 	@echo "Compiling client..."
