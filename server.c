@@ -5,33 +5,48 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
-#include "struct.h"
+#include <stdbool.h>
+#include "struct_server.h"
 
 #define PORT 8080
-
-/*Server :
-    Créer le socket
-    Assigner les adresses
-    bind
-    accepter les clients > fork
-    Communication
-*/
-
-struct var{
-    double balance;
-    double total;
-    char* utility; 
-};
 
 void syserr(char* messsage){
     perror(messsage);
 }
 
+void putUInt32(uint32_t **ptr, uint32_t x){
+    **ptr = x;
+    *ptr += 1;
+}
+
+bool serialise(char *buff, int buff_len, struct account *acc){
+   /* *buff = // ecrire 1 octet
+    buff+=1;
+    *(uint32_t*)buff =  // ecrire 1 uint32_t
+    buff+=sizeof(int32_t); */
+    putUInt32((uint32_t**)&buff, 3);
+    return true;
+}
+
+
+
 int main(int argc, char* agrv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    char buffer[1024];
-    char log[10];
+   // FILE* fd = fdopen(sock_fd, "w");
+   // char buffer[1024];
     int yes = 1;
+
+    /* USER */
+    struct user u1; 
+    strcpy(u1.name, "toto");
+    u1.balance = 0.0;
+
+    /* ACCOUNT */
+    struct account a1;
+    strcpy(a1.title, "account 1");
+    a1.list_user[0] = u1;
+    a1.total = 0.0;
+
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
         return 1;
@@ -49,10 +64,8 @@ int main(int argc, char* agrv[]){
         syserr("setsockopt");
         return 1;
     }
-
-    int bind_fd = bind(sock_fd, (struct sockaddr*)&server, sizeof(server));
-    
-    if(bind_fd == -1){
+   
+    if(bind(sock_fd, (struct sockaddr*)&server, sizeof(server)) == -1){
         syserr("Error with binding of socket\n");
         return 1;
     }else{
@@ -69,41 +82,23 @@ int main(int argc, char* agrv[]){
     }
 
     int connect_fd;
-    int nbClient = 0;
-    
-    //int r = recv(connect_fd, buffer, 1024, MSG_WAITALL);
-    //printf("%d", r);
-   // int nb; 
-  //  printf("j'ai obtenu : %s\n", buffer);
-   // int s;
-   // pid_t childpid;
-    
+
     connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
+    FILE* fdc = fdopen(connect_fd, "w");
+
     while(1){
         if(connect_fd < 0){
             syserr("error of connexion with client\n");
             return 1;
         }else{
-        //   printf("connexion with client successful\n");
-            nbClient++;
-            printf("number of client connected: %d\n", nbClient);
+        //    nbClient++;
+         //   printf("number of client connected: %d\n", nbClient);
         }
-        recv(connect_fd, buffer, strlen(buffer)+1, 0);
-        //printf("%d", r);
-        if(strcmp(buffer, "exit") == 0) {
-            printf("A client has disconnected\n");
-            nbClient--;
-            printf("number of client connected: %d\n", nbClient);
-            connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
-        }
-       /* printf("j'ai obtenu : %s\n", buffer);
-        nb = read(STDIN_FILENO, &buffer, sizeof(buffer));
-        buffer[strcspn(buffer, "\n")] = 0;
-        s = send(sock_fd, buffer, nb, 0);
-        r = recv(connect_fd, buffer, 1024, 0); */
-       /* if((childpid = fork()) == 0){
-			close(sock_fd);
-        } */
+        //recv(connect_fd, buffer, strlen(buffer)+1, 0);
+        //fread(&u 1, sizeof(u1), 1, fdc);
+
+        fwrite(a1.list_user->name, sizeof(char), 1, fdc);
+        connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
     }
     close(connect_fd);
     return 0;

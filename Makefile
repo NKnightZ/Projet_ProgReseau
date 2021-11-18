@@ -1,9 +1,17 @@
-TARGET=client server 
-CC=gcc
-CFLAGS= -g -Wall 
+TARGET=client server
+CFLAGS= -g -Wall -Werror -Wconversion
 
-all:
-	@echo "Compiling client..."
-	$(CC) client.c -o client
-	@echo "Compiling server..."
-	$(CC) server.c -o server
+all: client server
+
+client: client.o
+
+server: server.o
+
+client.o: client.c 
+
+server.o: server.c struct_server.h
+
+clean:
+	rm -f *.o
+
+.PHONY: all

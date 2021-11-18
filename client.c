@@ -6,35 +6,20 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "struct.h"
+#include <stdbool.h>
 
 #define PORT 8080 
 
-/*Client : 
-    Créer le socket
-    Assigner les adresses
-    Se connecter au server
-    Communication
-*/
-
 // faire de l'UDP, (et sinon mettre un compteur de paquet pour verifier qu'il n'y a pas de paquet perdu ça sera un bonus) 
+// ne pas oublier fflush apres un fwrite pour forcer l'envoie
 
-void init_account(struct account *a1){
-    a1 = malloc(sizeof(a1));
+/* void init_account(struct account *a1, struct user *u1){
     printf("To start you must to create a account\n");
-    struct user u1;
-    printf("enter your name: ");
-    scanf("%s", u1.name);
-    /* if(nb <= 0){
-        printf("sorry your name it's invalid, please enter your name again: ");
-    } */
-    u1.balance = 0.0;
-    printf("Hello %s\n", u1.name);
-    printf("Your balance is %g€\n", u1.balance);
+    
     //struct account a1;
     printf("enter the title of account: \n");
     scanf("%s", a1->title);
-    a1->user_account = u1;
+    a1->user_account = *u1;
     char res;
     printf("Do you want to enter the description of your account: y/n\n");
     do{
@@ -51,29 +36,23 @@ void init_account(struct account *a1){
         }
     }while(res != 'y' || res != 'n');
     printf("Done ! Your account has been successfully created\n");
-}
-
-void join_account(struct account *a1){
-
-}
+} */
 
 void syserr(char *message) {
     perror(message);
 }
 
-void display_menu_starting(){
-    printf("- Welcome to Tricount App -\n");
-    printf(" - Main menu - \n");
-    printf("1. Create an account\n");
-    printf("2. Join an account \n");
-    printf("3. Exit \n");
-}
+// send_rembourse(from, source, montant)
+
+// send_depense()
+
+
 
 int main(int argc, char* argv[]){
-   
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    char buffer[1024], reponse[2048];
-    int choice = 0;
+    FILE* fd = fdopen(sock_fd, "w");
+   // char buffer[1024]; //, reponse[2048];
+   
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
         return 1;
@@ -90,84 +69,19 @@ int main(int argc, char* argv[]){
     socklen_t len = sizeof(server);
 
     int connect_fd;
-    connect_fd = connect(sock_fd, (struct sockaddr*) &server, sizeof(server));
+    connect_fd = connect(sock_fd, (struct sockaddr*) &server, len);
     if(connect_fd < 0){
         syserr("Error of connexion with the server\n");
         return 1;
     }else{
         printf("Connexion successful !\n");
-        display_menu_starting();
-        scanf("%d", &choice);
     }
-    struct account list_account[5];
-    if(choice == 1){
-        struct account *a1 = NULL;
-        init_account(a1);
-        buffer[0] = '1';
-        send(connect_fd, buffer, strlen(buffer)+1, 0);
-        list_account[0] = *a1;
-    }else if(choice == 2){ //I join an account
-        printf("What account want you join ?\n");
-        printf(" - %s", list_account[0].title);
-    }else if(choice == 3){ 
-        printf("Disconnected\n");
-        strcpy(buffer, "exit");
-        buffer[strcspn(buffer, "\n")] = 0;
-        printf("%s\n", buffer);
-        send(sock_fd, buffer, strlen(buffer)+1, 0);
-        return EXIT_SUCCESS;
-    }
-    while(1){
-       
-       // recv(sock_fd, buffer, 1024, 0);
-       /* if(buffer[0] == '1'){
-            //printf("vous etes le premier client");
-        } */
-       /* while(1){
-            printf("Client: \t");
-		    scanf("%s", &buffer[0]);
-		    send(sock_fd, buffer, strlen(buffer), 0);
-            if(strcmp(buffer, "!exit") == 0){
-			    close(sock_fd);
-			    printf("[-]Disconnected from server.\n");
-			    exit(1);
-		    }
-            if(recv(sock_fd, buffer, 1024, 0) < 0){
-			    printf("[-]Error in receiving data.\n");
-		    }else{
-			    printf("Server: \t%s\n", buffer);
-		    }
-        } */
-    
-   /* int nb = read(STDIN_FILENO, &buffer, sizeof(buffer));
-    buffer[strcspn(buffer, "\n")] = 0;
-    int s = send(sock_fd, buffer, nb, MSG_CONFIRM);
-   // int r = recvfrom(sock_fd, buffer, 1024, MSG_WAITALL, (struct sockaddr*)&server, &len); */
-    // scanf("%[^\n]%*c", buffer); 
-   /* buffer[strcspn(buffer, "\n")] = 0;
-    send(sock_fd, buffer, 5, 0);
-    recv(connect_fd, reponse, 1024, MSG_WAITALL); */
 
-   // while(1){
-        // get all words, not only the first
-        
-        
-       // int r = recv(connect_fd, buffer, 1024, MSG_WAITALL);
-        // buffer[r] = '\0';
-       // printf("%s\n", buffer);  // mon buffer se remplit bien       
-        /*  printf("reponse du server : %s\n", buffer);
-          if(r >0){
-            break;
-        }
-        for(int i =0; i<s; i++){
-            buffer[i] = '\0';
-            printf("je recommence");
-        } */
-       
-     //   recv(connect_fd, reponse, 1024, 0);
-   // } 
-    }
+    // fwrite(&u1, sizeof(u1), 1, fd);  
+    fflush(fd);
+    
+    // printf("%s\n", argv[1]);
+   // size_t w = fwrite( 
     close(sock_fd);
     return 0;
 }
-
