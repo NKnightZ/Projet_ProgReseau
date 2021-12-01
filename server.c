@@ -28,12 +28,9 @@ bool serialise(char *buff, int buff_len, struct account *acc){
     return true;
 }
 
-
-
 int main(int argc, char* agrv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
    // FILE* fd = fdopen(sock_fd, "w");
-   // char buffer[1024];
     int yes = 1;
 
     /* USER */
@@ -91,14 +88,9 @@ int main(int argc, char* agrv[]){
             syserr("error of connexion with client\n");
             return 1;
         }else{
-        //    nbClient++;
-         //   printf("number of client connected: %d\n", nbClient);
+            fwrite(a1.list_user->name, sizeof(char), 1, fdc);
+            connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
         }
-        //recv(connect_fd, buffer, strlen(buffer)+1, 0);
-        //fread(&u 1, sizeof(u1), 1, fdc);
-
-        fwrite(a1.list_user->name, sizeof(char), 1, fdc);
-        connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
     }
     close(connect_fd);
     return 0;

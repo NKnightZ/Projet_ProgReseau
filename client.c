@@ -51,8 +51,7 @@ void syserr(char *message) {
 int main(int argc, char* argv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     FILE* fd = fdopen(sock_fd, "w");
-   // char buffer[1024]; //, reponse[2048];
-   
+    
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
         return 1;
