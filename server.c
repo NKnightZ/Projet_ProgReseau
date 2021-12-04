@@ -32,6 +32,7 @@ int main(int argc, char* agrv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
    // FILE* fd = fdopen(sock_fd, "w");
     int yes = 1;
+    char buffer[1024];
 
     /* USER */
     struct user u1; 
@@ -82,15 +83,19 @@ int main(int argc, char* agrv[]){
 
     connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
     FILE* fdc = fdopen(connect_fd, "w");
-
+    
     while(1){
         if(connect_fd < 0){
             syserr("error of connexion with client\n");
             return 1;
         }else{
-            fwrite(a1.list_user->name, sizeof(char), 1, fdc);
+            //fwrite(a1.list_user->name, sizeof(char), 1, fdc);
+            fread(buffer, sizeof(buffer), 1, fdc);
+            printf("je print le buffer: %s", buffer);
             connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
         }
+        serialise(buffer, 1024, &a1);
+        printf("je print le buffer: %s", buffer);
     }
     close(connect_fd);
     return 0;

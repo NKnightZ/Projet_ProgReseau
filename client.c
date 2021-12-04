@@ -51,7 +51,8 @@ void syserr(char *message) {
 int main(int argc, char* argv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     FILE* fd = fdopen(sock_fd, "w");
-    
+    char buffer[1024];
+
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
         return 1;
@@ -69,6 +70,7 @@ int main(int argc, char* argv[]){
 
     int connect_fd;
     connect_fd = connect(sock_fd, (struct sockaddr*) &server, len);
+    
     if(connect_fd < 0){
         syserr("Error of connexion with the server\n");
         return 1;
@@ -76,10 +78,10 @@ int main(int argc, char* argv[]){
         printf("Connexion successful !\n");
     }
 
-    // fwrite(&u1, sizeof(u1), 1, fd);  
+    fwrite(buffer, sizeof(buffer), 1, fd);  
     fflush(fd);
     
-    // printf("%s\n", argv[1]);
+    printf("%s\n", argv[1]);
    // size_t w = fwrite( 
     close(sock_fd);
     return 0;

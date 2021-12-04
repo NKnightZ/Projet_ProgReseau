@@ -1,6 +1,3 @@
-#ifndef __TRICOUNT_STRUCT__
-#define __TRICOUNT_STRUCT__
-
 /* cree un server : ncat -l 123456 (ici le port = 123456)
 cree client : nc localhost 123456
 
@@ -17,6 +14,7 @@ netstat -nato
 // structure donnee du client sur le server account par exemple
 // structure des paquets qu'on envoie
 
+//client:
 // envoie de 3 paquet
 // rembourser
 // depenser
@@ -31,5 +29,3 @@ netstat -nato
 // tri paul rembourse marc 25 ENTER
 // tri toto depense 25 -> toto va depense 25€ 
 // tri toto state
-
-#endif
