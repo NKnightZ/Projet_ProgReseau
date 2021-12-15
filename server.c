@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
@@ -9,8 +8,9 @@
 #include "struct_server.h"
 
 #define PORT 8080
+#define BUFFER_SIZE 1024
 
-void syserr(char* messsage){
+void syserr(char *messsage){
     perror(messsage);
 }
 
@@ -28,11 +28,11 @@ bool serialise(char *buff, int buff_len, struct account *acc){
     return true;
 }
 
+
 int main(int argc, char* agrv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-   // FILE* fd = fdopen(sock_fd, "w");
     int yes = 1;
-    char buffer[1024];
+    char buffer[BUFFER_SIZE];
 
     /* USER */
     struct user u1; 
@@ -82,20 +82,44 @@ int main(int argc, char* agrv[]){
     int connect_fd;
 
     connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
-    FILE* fdc = fdopen(connect_fd, "w");
-    
-    while(1){
+    FILE* fdc = fdopen(connect_fd, "w+");
+
+    fd_set read_fd;
+    FD_ZERO(&read_fd);
+    FD_SET(sock_fd, &read_fd);
+    FD_SET(connect_fd, &read_fd);
+
+    while(true){
+        int nbSelect = select(FD_SETSIZE, &read_fd, NULL, NULL, NULL);
+        
+        if(nbSelect < 0){
+            syserr("error of select");
+            return 1;
+        }
+
+        if(FD_ISSET(sock_fd, &read_fd)){
+            int client2;
+            socklen_t len = sizeof(client2);
+
+            client2 = accept(sock_fd, (struct sockaddr*)&client, &len);
+            FD_SET(client2, &read_fd);
+            size_t nbread; 
+            nbread = fread(buffer, sizeof(buffer), 1, fdc);
+            printf("number i read : %ld\n", nbread);
+        }
         if(connect_fd < 0){
             syserr("error of connexion with client\n");
             return 1;
-        }else{
-            //fwrite(a1.list_user->name, sizeof(char), 1, fdc);
-            fread(buffer, sizeof(buffer), 1, fdc);
-            printf("je print le buffer: %s", buffer);
-            connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
         }
-        serialise(buffer, 1024, &a1);
-        printf("je print le buffer: %s", buffer);
+        size_t nbread = fread(buffer, sizeof(buffer), 1, fdc);
+        printf("number i read : %ld\n", nbread);
+        // connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
+        
+        fread(buffer, sizeof(buffer), 1, fdc);
+        if(strcmp(buffer, "state") == 0) {
+            memcpy(&buffer, &a1, sizeof(a1));
+            fwrite(buffer, sizeof(buffer),1, fdc);
+        }
     }
     close(connect_fd);
     return 0;
