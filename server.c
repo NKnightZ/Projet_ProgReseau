@@ -9,6 +9,21 @@
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
+#define MAX_CLIENTS 10
+
+// int tab_list[MAX_CLIENTS];
+int sock_fd;
+
+struct user u1;
+struct account a1;
+
+struct client client_array[MAX_CLIENTS];
+bool clients[MAX_CLIENTS];
+
+struct sockaddr_in server, client;
+
+socklen_t len;
+int accept_sock;
 
 void syserr(char *messsage){
     perror(messsage);
@@ -28,19 +43,28 @@ bool serialise(char *buff, int buff_len, struct account *acc){
     return true;
 }
 
+bool accept_client(){
+    int val_return = accept(sock_fd, (struct sockaddr*)&client, &len);
+    if(val_return < 0){
+        syserr("error of accept");
+        return true;
+    }
+    client_array[0].fd = val_return;
+    return false;
+}
 
 int main(int argc, char* agrv[]){
-    int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     int yes = 1;
     char buffer[BUFFER_SIZE];
 
+    memset(clients, 1, sizeof(clients));
+
     /* USER */
-    struct user u1; 
     strcpy(u1.name, "toto");
     u1.balance = 0.0;
 
     /* ACCOUNT */
-    struct account a1;
     strcpy(a1.title, "account 1");
     a1.list_user[0] = u1;
     a1.total = 0.0;
@@ -52,13 +76,11 @@ int main(int argc, char* agrv[]){
         printf("Socket creation successful\n");
     }
 
-    struct sockaddr_in server, client;
-
     server.sin_addr.s_addr = htonl(INADDR_ANY); 
     server.sin_port = htons(PORT); 
     server.sin_family = AF_INET;
 
-    if(setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) {
+    if(setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1) { // à retirer, pas sur un projet final
         syserr("setsockopt");
         return 1;
     }
@@ -70,7 +92,7 @@ int main(int argc, char* agrv[]){
         printf("Bind of socket successful\n");
     }
     
-    socklen_t len = sizeof(client);
+    len = sizeof(client);
     
     if(listen(sock_fd, 10) == 0){
         printf("[+]Listening....\n");
@@ -79,49 +101,72 @@ int main(int argc, char* agrv[]){
         return 1;
     }
 
-    int connect_fd;
+    accept_sock = accept(sock_fd, (struct sockaddr*)&client, &len);
+    // FILE* fdc = fdopen(accept_sock, "w+");
 
-    connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
-    FILE* fdc = fdopen(connect_fd, "w+");
-
-    fd_set read_fd;
-    FD_ZERO(&read_fd);
-    FD_SET(sock_fd, &read_fd);
-    FD_SET(connect_fd, &read_fd);
+    
+    //FD_SET(sock_fd, &client_fd);
+   // FD_SET(accept_sock, &client_fd);
 
     while(true){
-        int nbSelect = select(FD_SETSIZE, &read_fd, NULL, NULL, NULL);
+       /* fd_set client_fd;
+        FD_ZERO(&client_fd);
+        FD_SET(sock_fd, &client_fd);
+
+        int nbSelect = select(FD_SETSIZE, &client_fd, NULL, NULL, NULL);
+         
+        if(nbSelect < 0){
+            syserr("error of select");
+            return 1;
+        }
+        */
+        fd_set set;
+        FD_ZERO (&set);
+        FD_SET(sock_fd, &set);
+        
+        for(int i=0; i<MAX_CLIENTS; i++){
+           if(clients[i]){
+               FD_SET(client_array[i].fd, &set);
+           }
+        }
+
+        int nbSelect = select(FD_SETSIZE, &set, NULL, NULL, NULL);
         
         if(nbSelect < 0){
             syserr("error of select");
             return 1;
         }
 
-        if(FD_ISSET(sock_fd, &read_fd)){
-            int client2;
-            socklen_t len = sizeof(client2);
-
-            client2 = accept(sock_fd, (struct sockaddr*)&client, &len);
-            FD_SET(client2, &read_fd);
+        if(FD_ISSET(accept_sock, &set)){
+            accept_client();
+        }else{
+           // treate_client(set);
+     /*     //  client_array.file = fdopen(client_array.fd, "w+");
             size_t nbread; 
-            nbread = fread(buffer, sizeof(buffer), 1, fdc);
+           nbread = fread(&set, sizeof(buffer), 1, client_array->file);
             printf("number i read : %ld\n", nbread);
+        */
         }
-        if(connect_fd < 0){
+
+        size_t nbread; 
+        nbread = fread(&set, sizeof(buffer), 1, client_array[0].file);
+        printf("number i read : %ld\n", nbread); 
+        
+        if(accept_sock < 0){
             syserr("error of connexion with client\n");
             return 1;
         }
-        size_t nbread = fread(buffer, sizeof(buffer), 1, fdc);
-        printf("number i read : %ld\n", nbread);
+       // size_t nbread = fread(buffer, sizeof(buffer), 1, fdc);
+       // printf("number i read : %ld\n", nbread);
         // connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
         
-        fread(buffer, sizeof(buffer), 1, fdc);
+       // fread(buffer, sizeof(buffer), 1, fdc);
         if(strcmp(buffer, "state") == 0) {
             memcpy(&buffer, &a1, sizeof(a1));
-            fwrite(buffer, sizeof(buffer),1, fdc);
+          //  fwrite(buffer, sizeof(buffer),1, fdc);
         }
     }
-    close(connect_fd);
+    close(accept_sock);
     return 0;
 }
 

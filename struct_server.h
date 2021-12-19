@@ -11,10 +11,17 @@ Serveur peut envoyer 1 paquet :
 #define MAX_CLIENT_NAME_LENGTH 120
 #define MAX_LIST_SIZE 10
 #define MAX_TITLE_LENGTH 10
+#define MAX_BUFF 1024
 
 struct user{
     char name[MAX_CLIENT_NAME_LENGTH];
     int32_t balance; // int32_t car balance peut etre negative
+};
+
+struct client{
+    int fd;
+    // char buffer[MAX_BUFF]; 
+    FILE* file;
 };
 
 struct account{ // <- à mettre au niveau du serveur, le client n'a pas besoin de crée un compte à chaque fois qu'il se connecte, sa sera le serveur qui lui proposera de réjoindre son compte
