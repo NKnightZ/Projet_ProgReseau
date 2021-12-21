@@ -22,6 +22,7 @@ struct sockaddr_in server, client;
 
 socklen_t len;
 char buffer[BUFFER_SIZE];
+int val_return;
 
 void syserr(char *messsage){
     perror(messsage);
@@ -42,27 +43,19 @@ bool serialise(char *buff, int buff_len, struct account *acc){
 }
 
 bool accept_client(){
-    struct sockaddr_in csin = { 0 };
-    socklen_t length = sizeof(csin);
-    int val_return = accept(sock_fd, (struct sockaddr*)&csin, &length);
+    struct sockaddr_in new_client = { 0 };
+    socklen_t length = sizeof(new_client);
+    val_return = accept(sock_fd, (struct sockaddr*)&new_client, &length);
     if(val_return < 0){
         syserr("error of accept");
         return true;
     }
     printf("accept of client successful\n");
     client_array[0].fd = val_return;
-    size_t nbread;
-    client_array[0].file = fdopen(client_array[0].fd, "w+");
-    nbread = fread(&val_return, sizeof(char), sizeof(buffer), client_array[0].file);
-    if(nbread < -1){
-        syserr("fread");
-        return true;
-    }
-    printf("number i read : %ld\n", nbread); 
     return false;
 }
 
-int main(int argc, char* agrv[]){
+int main(int argc, char *agrv[]){
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     int yes = 1;
     int max = sock_fd;
@@ -148,10 +141,11 @@ int main(int argc, char* agrv[]){
         if(FD_ISSET(sock_fd, &set)){
             accept_client();
         }else{
+            
            // treate_client(set);
-     /*     //  client_array.file = fdopen(client_array.fd, "w+");
+        /* client_array.file = fdopen(client_array.fd, "w+");
             size_t nbread; 
-           nbread = fread(&set, sizeof(buffer), 1, client_array->file);
+            nbread = fread(&set, sizeof(buffer), 1, client_array->file);
             printf("number i read : %ld\n", nbread);
         */
         }
@@ -169,13 +163,29 @@ int main(int argc, char* agrv[]){
         // connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
         
        // fread(buffer, sizeof(buffer), 1, fdc);
+        size_t nbread;
+        client_array[0].file = fdopen(client_array[0].fd, "w+");
+        nbread = fread(&buffer, sizeof(int), sizeof(MAX_BUFF), client_array[0].file);
+        if(nbread < sizeof(MAX_BUFF)){
+            syserr("fread");
+            return true;
+        }
+        printf("number i read: %ld\n", nbread);
+        printf("%s\n",buffer);
+
         if(strcmp(buffer, "state") == 0) {
-            memcpy(&buffer, &a1, sizeof(a1));
-          //  fwrite(buffer, sizeof(buffer),1, fdc);
+            printf("sending the state of account...\n");
+            memcpy(buffer, &a1, sizeof(a1));
+            printf("%s\n", buffer);
+            size_t nb_write = fwrite(buffer, sizeof(char), sizeof(MAX_BUFF), client_array[0].file);
+            printf("number i write: %ld\n", nb_write);
+            if(fflush(client_array[0].file)){
+                syserr("error of fflush");
+            }
         }
     }
-    fclose(client_array[0].file);
-   // close(accept_sock);
+    // fclose(client_array[0].file);
+    // close(accept_sock);
     return 0;
 }
 

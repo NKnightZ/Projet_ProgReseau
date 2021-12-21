@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
+#define BUFF_SIZE 1024
 
 void syserr(char *message) {
     perror(message);
@@ -19,9 +19,9 @@ void syserr(char *message) {
 
 // send_depense()
 
-int main(int argc, char* argv[]){
+int main(int argc, char *argv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-   // char buffer[BUFF_SIZE];
+    char buffer[BUFF_SIZE];
 
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
@@ -54,13 +54,20 @@ int main(int argc, char* argv[]){
         return 1;
     }
     
-    printf("%s\n", argv[1]);
+    if(argc > 1){
+        printf("%s\n", argv[1]);
+        size_t nb_write = fwrite(argv[1], sizeof(*argv), strlen(argv[1]), fdc);
     
-    size_t nb_write = fwrite(argv[1], sizeof(*argv), strlen(argv[1]), fdc);
-    printf("number i write: %ld\n", nb_write);
-    fflush(fdc);
-    //fread(buffer, strlen(buffer),1, fdc); //ce que je reçois du server
-    //printf("%s\n", buffer);
+        printf("number i write: %ld\n", nb_write);
+    
+        if(fflush(fdc)){
+            syserr("fflush");
+        }
+    }
+    size_t nbread = fread(&buffer, strlen(buffer), sizeof(BUFF_SIZE), fdc); // ce que je reçois du server
+    printf("number i read: %ld\n", nbread);
+    printf("%s\n", buffer);
+
     close(sock_fd);
     return 0;
 }
