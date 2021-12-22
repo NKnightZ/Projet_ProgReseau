@@ -40,13 +40,13 @@ bool accept_client(){
     return false;
 }
 
-bool send_spend(struct user u1, struct user u2, int32_t amount){
+bool send_spend(struct user u1, int32_t amount){
     if(amount < 0){
         syserr("The amount must be positive");
         return true;
     }else{
         u1.balance -= amount/2;
-        u2.balance += amount/2;
+        users[1].balance += amount/2;
         a1.total += amount;
     }
     return false;
@@ -139,26 +139,42 @@ int main(int argc, char *agrv[]){
 
         size_t nbread;
         client_array[0].in = fdopen(client_array[0].fd, "r");
-        nbread = fread(buffer, sizeof(char), 1024, client_array[0].in);
-        if(nbread < 1){
-            syserr("fread");
-            return true;
+        if(client_array[0].in == NULL){
+            syserr("error of fdopen");
+            return 1;
         }
-        printf("number i read: %ld\n", nbread);
-        printf("%s\n",buffer);
-
+        nbread = fread(buffer, sizeof(char), 1024, client_array[0].in);
+        
+        if(nbread < 1){
+            syserr("error of fread");
+            return 1;
+        }
+       
         if(strcmp(buffer, "state") == 0) {
             client_array[0].out = fdopen(client_array[0].fd, "w");
+            if(client_array[0].out == NULL){
+                syserr("error of fdopen");
+                return 1;
+            }
             printf("sending the state of account...\n");
             memcpy(response, &a1, sizeof(a1));
-            printf("%s\n", response);
             size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out);
-            printf("number i write: %ld\n", nb_write);
+            if(nb_write < 0){
+                syserr("error of fwrite");
+                return 1;
+            }
             if(fflush(client_array[0].out)){
                 syserr("error of fflush");
             }
         }else if(strcmp(buffer, users[0].name) == 0){
-            
+            char user_name[MAX_CLIENT_NAME_LENGTH];
+            memcpy(&user_name, buffer, sizeof(user_name));
+            printf("user_name: %s\n", user_name);
+            int32_t amount = 0;
+            memcpy(&amount, buffer, sizeof(amount));
+            printf("amout: %d\n", amount);
+        }else{
+            printf("unknow command\n");
         }
     }
     fclose(client_array[0].file);

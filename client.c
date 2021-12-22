@@ -27,6 +27,23 @@ int main(int argc, char *argv[]){
     char buffer[BUFFER_SIZE_SEND];
     char response[BUFFER_SIZE_SEND];
 
+    char response_user_name[BUFFER_SIZE_SEND];
+    char response_action[BUFFER_SIZE_SEND];
+    char response_amount[BUFFER_SIZE_SEND];
+
+    /* USER */
+    strcpy(users[0].name, "foozy");
+    users[0].balance = 0;
+
+    strcpy(users[1].name, "barry");
+    users[1].balance = 0;
+    
+    /* ACCOUNT */
+    strcpy(a1.title, "account 1");
+    a1.list_user[0] = users[0];
+    a1.list_user[1] = users[1];
+    a1.total = 0;
+
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
         return 1;
@@ -59,16 +76,21 @@ int main(int argc, char *argv[]){
     }
     
     if(argc > 1){
-        printf("%s\n", argv[1]);
         if(strcmp(argv[1], "state") == 0){
             strcpy(response, argv[1]);
             size_t nb_write = fwrite(response, sizeof(char), 1024, fdc);
-            printf("number i write: %ld\n", nb_write);
+            if(nb_write < 0){
+                syserr("error of fwrite");
+                return 1;
+            }
             if(fflush(fdc)){
                 syserr("fflush");
             }
-            size_t nbread = fread(buffer, sizeof(char), sizeof(buffer), fdc); // ce que je reçois du server
-            printf("number i read: %ld\n", nbread);
+            size_t nb_read = fread(buffer, sizeof(char), sizeof(buffer), fdc);
+            if(nb_read < 0){
+                syserr("error of fread");
+                return 1;
+            }
             memcpy(&a1, buffer, sizeof(a1));
             printf("account title: %s\n", a1.title);
             printf("---user 1---\n");
@@ -78,8 +100,39 @@ int main(int argc, char *argv[]){
             printf("user's name: %s\n", a1.list_user[1].name);
             printf("balance: %d\n", a1.list_user[1].balance);
             printf("total: %d\n", a1.total);
-        }else if(strcmp(argv[1], users[0].name)){
-            
+        }else if(strcmp(argv[1], users[0].name) == 0){
+            if(strcmp(argv[2], "spend") == 0){
+                printf("depense\n");
+                strcpy(response_user_name, argv[1]);
+                strcpy(response_action, argv[2]);
+                strcpy(response_amount, argv[3]);
+                size_t nb_write = fwrite(response_user_name, sizeof(char), 2048, fdc);
+                printf("number i write: %ld\n", nb_write);
+                if(fflush(fdc)){
+                    syserr("fflush");
+                }
+                size_t nbread = fread(buffer, sizeof(char), sizeof(buffer), fdc);
+                printf("number i read: %ld\n", nbread);
+                memcpy(&a1, buffer, sizeof(a1));
+                printf("user's name: %s\n", a1.list_user[0].name);
+                printf("balance: %d\n", a1.list_user[0].balance);
+                printf("---user 2---\n");
+                printf("user's name: %s\n", a1.list_user[1].name);
+                printf("balance: %d\n", a1.list_user[1].balance);
+                printf("total: %d\n", a1.total);
+            }
+        }else{
+            strcpy(response, argv[1]);
+            size_t nb_write = fwrite(response, sizeof(char), 1024, fdc);
+            if(nb_write < 0){
+                syserr("error of fwrite");
+                return 1;
+            }
+            if(fflush(fdc)){
+                syserr("fflush");
+            }
+            printf("unknow command\n");
+            fclose(fdc);
         }
     }
     close(sock_fd);
