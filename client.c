@@ -7,21 +7,25 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "struct_server.h"
 
 #define PORT 8080
-#define BUFF_SIZE 1024
+
+struct account a1;
+struct user users[MAX_LIST_SIZE];
 
 void syserr(char *message) {
     perror(message);
 }
 
-// send_rembourse(from, source, montant)
+// send_refund(from, source, amount)
 
-// send_depense()
+// send_spend(user, amount)
 
 int main(int argc, char *argv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    char buffer[BUFF_SIZE];
+    char buffer[BUFFER_SIZE_SEND];
+    char response[BUFFER_SIZE_SEND];
 
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
@@ -56,18 +60,28 @@ int main(int argc, char *argv[]){
     
     if(argc > 1){
         printf("%s\n", argv[1]);
-        size_t nb_write = fwrite(argv[1], sizeof(*argv), strlen(argv[1]), fdc);
-    
-        printf("number i write: %ld\n", nb_write);
-    
-        if(fflush(fdc)){
-            syserr("fflush");
+        if(strcmp(argv[1], "state") == 0){
+            strcpy(response, argv[1]);
+            size_t nb_write = fwrite(response, sizeof(char), 1024, fdc);
+            printf("number i write: %ld\n", nb_write);
+            if(fflush(fdc)){
+                syserr("fflush");
+            }
+            size_t nbread = fread(buffer, sizeof(char), sizeof(buffer), fdc); // ce que je reçois du server
+            printf("number i read: %ld\n", nbread);
+            memcpy(&a1, buffer, sizeof(a1));
+            printf("account title: %s\n", a1.title);
+            printf("---user 1---\n");
+            printf("user's name: %s\n", a1.list_user[0].name);
+            printf("balance: %d\n", a1.list_user[0].balance);
+            printf("---user 2---\n");
+            printf("user's name: %s\n", a1.list_user[1].name);
+            printf("balance: %d\n", a1.list_user[1].balance);
+            printf("total: %d\n", a1.total);
+        }else if(strcmp(argv[1], users[0].name)){
+            
         }
     }
-    size_t nbread = fread(&buffer, strlen(buffer), sizeof(BUFF_SIZE), fdc); // ce que je reçois du server
-    printf("number i read: %ld\n", nbread);
-    printf("%s\n", buffer);
-
     close(sock_fd);
     return 0;
 }

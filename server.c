@@ -8,10 +8,8 @@
 #include "struct_server.h"
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
-#define MAX_CLIENTS 10
 
-struct user u1;
+struct user users[MAX_LIST_SIZE];
 struct account a1;
 
 struct client client_array[MAX_CLIENTS];
@@ -21,25 +19,12 @@ int sock_fd;
 struct sockaddr_in server, client;
 
 socklen_t len;
-char buffer[BUFFER_SIZE];
+char buffer[BUFFER_SIZE_RECIEVE];
+char response[BUFFER_SIZE_SEND];
 int val_return;
 
 void syserr(char *messsage){
     perror(messsage);
-}
-
-void putUInt32(uint32_t **ptr, uint32_t x){
-    **ptr = x;
-    *ptr += 1;
-}
-
-bool serialise(char *buff, int buff_len, struct account *acc){
-   /* *buff = // ecrire 1 octet
-    buff+=1;
-    *(uint32_t*)buff =  // ecrire 1 uint32_t
-    buff+=sizeof(int32_t); */
-    putUInt32((uint32_t**)&buff, 3);
-    return true;
 }
 
 bool accept_client(){
@@ -55,6 +40,30 @@ bool accept_client(){
     return false;
 }
 
+bool send_spend(struct user u1, struct user u2, int32_t amount){
+    if(amount < 0){
+        syserr("The amount must be positive");
+        return true;
+    }else{
+        u1.balance -= amount/2;
+        u2.balance += amount/2;
+        a1.total += amount;
+    }
+    return false;
+}
+
+bool send_refund(struct user u1, struct user u2, int32_t amount){
+    if(amount < 0){
+        syserr("The amount must be positive");
+        return true;
+    }else{
+        u1.balance += amount/2;
+        u2.balance -= amount/2;
+        a1.total += amount;
+    }
+    return false;
+}
+
 int main(int argc, char *agrv[]){
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     int yes = 1;
@@ -62,13 +71,17 @@ int main(int argc, char *agrv[]){
     memset(clients, 1, sizeof(clients));
 
     /* USER */
-    strcpy(u1.name, "toto");
-    u1.balance = 0.0;
+    strcpy(users[0].name, "foozy");
+    users[0].balance = 0;
 
+    strcpy(users[1].name, "barry");
+    users[1].balance = 0;
+    
     /* ACCOUNT */
     strcpy(a1.title, "account 1");
-    a1.list_user[0] = u1;
-    a1.total = 0.0;
+    a1.list_user[0] = users[0];
+    a1.list_user[1] = users[1];
+    a1.total = 0;
 
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
@@ -102,25 +115,7 @@ int main(int argc, char *agrv[]){
         return 1;
     }
 
-    // accept_sock = accept(sock_fd, (struct sockaddr*)&client, &len);
-    // FILE* fdc = fdopen(accept_sock, "w+");
-
-    
-    //FD_SET(sock_fd, &client_fd);
-   // FD_SET(accept_sock, &client_fd);
-
     while(true){
-       /* fd_set client_fd;
-        FD_ZERO(&client_fd);
-        FD_SET(sock_fd, &client_fd);
-
-        int nbSelect = select(FD_SETSIZE, &client_fd, NULL, NULL, NULL);
-         
-        if(nbSelect < 0){
-            syserr("error of select");
-            return 1;
-        }
-        */
         fd_set set;
         FD_ZERO (&set); // clean the set
         FD_SET(sock_fd, &set);
@@ -140,33 +135,12 @@ int main(int argc, char *agrv[]){
 
         if(FD_ISSET(sock_fd, &set)){
             accept_client();
-        }else{
-            
-           // treate_client(set);
-        /* client_array.file = fdopen(client_array.fd, "w+");
-            size_t nbread; 
-            nbread = fread(&set, sizeof(buffer), 1, client_array->file);
-            printf("number i read : %ld\n", nbread);
-        */
         }
 
-       /* size_t nbread; 
-        nbread = fread(&set, sizeof(buffer), 1, client_array[0].file);
-        printf("number i read : %ld\n", nbread);  */
-        
-        /* if(accept_sock < 0){
-            syserr("error of connexion with client\n");
-            return 1;
-        } */
-       // size_t nbread = fread(buffer, sizeof(buffer), 1, fdc);
-       // printf("number i read : %ld\n", nbread);
-        // connect_fd = accept(sock_fd, (struct sockaddr*)&client, &len);
-        
-       // fread(buffer, sizeof(buffer), 1, fdc);
         size_t nbread;
-        client_array[0].file = fdopen(client_array[0].fd, "w+");
-        nbread = fread(&buffer, sizeof(int), sizeof(MAX_BUFF), client_array[0].file);
-        if(nbread < sizeof(MAX_BUFF)){
+        client_array[0].in = fdopen(client_array[0].fd, "r");
+        nbread = fread(buffer, sizeof(char), 1024, client_array[0].in);
+        if(nbread < 1){
             syserr("fread");
             return true;
         }
@@ -174,18 +148,23 @@ int main(int argc, char *agrv[]){
         printf("%s\n",buffer);
 
         if(strcmp(buffer, "state") == 0) {
+            client_array[0].out = fdopen(client_array[0].fd, "w");
             printf("sending the state of account...\n");
-            memcpy(buffer, &a1, sizeof(a1));
-            printf("%s\n", buffer);
-            size_t nb_write = fwrite(buffer, sizeof(char), sizeof(MAX_BUFF), client_array[0].file);
+            memcpy(response, &a1, sizeof(a1));
+            printf("%s\n", response);
+            size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out);
             printf("number i write: %ld\n", nb_write);
-            if(fflush(client_array[0].file)){
+            if(fflush(client_array[0].out)){
                 syserr("error of fflush");
             }
+        }else if(strcmp(buffer, users[0].name) == 0){
+            
         }
     }
-    // fclose(client_array[0].file);
-    // close(accept_sock);
+    fclose(client_array[0].file);
+    fclose(client_array[0].in);
+    fclose(client_array[0].out);
+    close(sock_fd);
     return 0;
 }
 
