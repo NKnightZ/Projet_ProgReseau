@@ -40,6 +40,22 @@ bool accept_client(){
     return false;
 }
 
+bool reading_client(){
+    size_t nbread;
+    client_array[0].in = fdopen(client_array[0].fd, "r");
+    if(client_array[0].in == NULL){
+        syserr("error of fdopen");
+        return true;
+    }
+    nbread = fread(buffer, sizeof(char), 1024, client_array[0].in);    
+    if(nbread < 1){
+        syserr("error of fread");
+        fclose(client_array[0].in);
+        return true;
+    }
+    return false;
+}
+
 bool send_spend(struct user u1, int32_t amount){
     if(amount < 0){
         syserr("The amount must be positive");
@@ -137,18 +153,7 @@ int main(int argc, char *agrv[]){
             accept_client();
         }
 
-        size_t nbread;
-        client_array[0].in = fdopen(client_array[0].fd, "r");
-        if(client_array[0].in == NULL){
-            syserr("error of fdopen");
-            return 1;
-        }
-        nbread = fread(buffer, sizeof(char), 1024, client_array[0].in);
-        
-        if(nbread < 1){
-            syserr("error of fread");
-            return 1;
-        }
+        reading_client();
        
         if(strcmp(buffer, "state") == 0) {
             client_array[0].out = fdopen(client_array[0].fd, "w");
@@ -174,7 +179,7 @@ int main(int argc, char *agrv[]){
             memcpy(&amount, buffer, sizeof(amount));
             printf("amout: %d\n", amount);
         }else{
-            printf("unknow command\n");
+            printf("unknown command\n");
         }
     }
     fclose(client_array[0].file);
