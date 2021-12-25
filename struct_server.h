@@ -8,7 +8,7 @@
 
 struct user{
     char name[MAX_CLIENT_NAME_LENGTH];
-    int32_t balance;
+    uint32_t balance;
 };
 
 struct client{

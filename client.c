@@ -99,6 +99,7 @@ int main(int argc, char *argv[]){
                 memcpy(&a1, buffer, sizeof(a1));
             }
             display_state_info();
+            
         }else if(strcmp(argv[1], "foozy") == 0){
             if(strcmp(argv[2], "spend") == 0){
                 printf("depense\n");
@@ -117,6 +118,12 @@ int main(int argc, char *argv[]){
                 if(fflush(fdc)){
                     syserr("error of fflush");
                 }
+                size_t nb_read = fread(buffer, sizeof(char), sizeof(buffer), fdc);
+                if(nb_read < 0){
+                    syserr("error of fread");
+                    return 1;
+                }
+                printf("%s\n", buffer);
             }else{
                 return 1;
             }
