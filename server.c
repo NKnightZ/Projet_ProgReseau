@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <ctype.h>
 #include "struct_server.h"
 
 #define PORT 8080
@@ -36,7 +37,9 @@ bool accept_client(){
         return true;
     }
     printf("accept of client successful\n");
-    client_array[0].fd = val_return;
+    for(int i = 0; i<MAX_CLIENTS; i++){
+        client_array[i].fd = val_return;
+    }
     return false;
 }
 
@@ -171,14 +174,24 @@ int main(int argc, char *agrv[]){
             if(fflush(client_array[0].out)){
                 syserr("error of fflush");
             }
-        }else if(strcmp(buffer, users[0].name) == 0){
+       /* }else if(strcmp(buffer, users[0].name) == 0){
             char user_name[MAX_CLIENT_NAME_LENGTH];
             memcpy(&user_name, buffer, sizeof(user_name));
             printf("user_name: %s\n", user_name);
-            int32_t amount = 0;
-            memcpy(&amount, buffer, sizeof(amount));
-            printf("amout: %d\n", amount);
+            reading_client();
+            if(strcmp(buffer, "depense") == 0){
+                reading_client();
+                int32_t amount = 0;
+                memcpy(&amount, buffer, sizeof(amount));
+                printf("amout: %d\n", amount);
+            } */
         }else{
+            for(size_t i = 0; i < strlen(buffer); i++){
+                if(isspace(buffer[i])){
+                    
+                }
+            }
+            printf("%s\n", buffer);
             printf("unknown command\n");
         }
     }
