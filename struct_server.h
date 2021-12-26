@@ -2,8 +2,8 @@
 #define MAX_LIST_SIZE 4
 #define MAX_TITLE_LENGTH 10
 
-#define BUFFER_SIZE_RECIEVE 1024
-#define BUFFER_SIZE_SEND 2048
+#define BUFFER_SIZE 1024
+#define RESPONSE_SIZE 2048
 #define MAX_CLIENTS 10
 
 struct user{
@@ -13,7 +13,6 @@ struct user{
 
 struct client{
     int fd;
-    FILE* file;
     FILE* in;
     FILE* out;
 };

@@ -12,7 +12,9 @@
 #define PORT 8080
 
 struct account a1;
-struct user users[MAX_LIST_SIZE];
+
+char buffer[BUFFER_SIZE];
+char response[RESPONSE_SIZE];
 
 void syserr(char *message) {
     perror(message);
@@ -42,12 +44,6 @@ void display_state_info(){
 
 int main(int argc, char *argv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    char buffer[BUFFER_SIZE_SEND];
-    char response[BUFFER_SIZE_SEND];
-
-    // char response_user_name[BUFFER_SIZE_SEND];
-    // char response_action[BUFFER_SIZE_SEND];
-    // char response_amount[BUFFER_SIZE_SEND];
     
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
@@ -82,8 +78,8 @@ int main(int argc, char *argv[]){
 
     if(argc > 1 && argc <= 5){
         if(argc == 2 && strcmp(argv[1], "state") == 0){
-            strcpy(response, argv[1]);
-            size_t nb_write = fwrite(response, sizeof(char), 1024, fdc);
+            strcpy(buffer, argv[1]);
+            size_t nb_write = fwrite(buffer, sizeof(char), sizeof(buffer), fdc);
             if(nb_write < 0){
                 syserr("error of fwrite");
                 return 1;
@@ -91,42 +87,34 @@ int main(int argc, char *argv[]){
             if(fflush(fdc)){
                 syserr("error of fflush");
             }
-            size_t nb_read = fread(buffer, sizeof(char), sizeof(buffer), fdc);
+            size_t nb_read = fread(response, sizeof(char), sizeof(buffer), fdc);
             if(nb_read < 0){
                 syserr("error of fread");
                 return 1;
             }else{
-                memcpy(&a1, buffer, sizeof(a1));
+                memcpy(&a1, response, sizeof(a1));
             }
             display_state_info();
-            
-        }else if(strcmp(argv[1], "foozy") == 0){
-            if(strcmp(argv[2], "spend") == 0){
-                printf("depense\n");
-                // strcpy(response, argv[2]);
-                strcpy(response, argv[1]);
-                strcat(response, " ");
-                strcat(response, argv[2]);
-                strcat(response, " ");
-                strcat(response, argv[3]);
-                printf("%s\n", response);
-                // strcpy(response_user_name, argv[1]);
-                // strcpy(response_action, argv[2]);
-                // strcpy(response_amount, argv[3]);
-                size_t nb_write = fwrite(response, sizeof(char), 2048, fdc);
-                printf("number i write: %ld\n", nb_write);
-                if(fflush(fdc)){
-                    syserr("error of fflush");
-                }
-                size_t nb_read = fread(buffer, sizeof(char), sizeof(buffer), fdc);
-                if(nb_read < 0){
-                    syserr("error of fread");
-                    return 1;
-                }
-                printf("%s\n", buffer);
-            }else{
+        }else if(strcmp(argv[2], "spend") == 0){
+            strcpy(buffer, argv[1]);
+            strcat(buffer, " ");
+            strcat(buffer, argv[2]);
+            strcat(buffer, " ");
+            strcat(buffer, argv[3]);
+            size_t nb_write = fwrite(buffer, sizeof(char), sizeof(buffer), fdc);
+            if(nb_write < 0){
+                syserr("error of fwrite");
                 return 1;
             }
+            if(fflush(fdc)){
+                syserr("error of fflush");
+            }
+            size_t nb_read = fread(response, sizeof(char), sizeof(response), fdc);
+            if(nb_read < 0){
+                syserr("error of fread");
+                return 1;
+            }
+            printf("%s\n", response);
         }else{
             printf("unknown command\n");
         }

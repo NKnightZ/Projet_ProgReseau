@@ -23,12 +23,11 @@ int sock_fd;
 struct sockaddr_in server, client;
 
 socklen_t len;
-char buffer[BUFFER_SIZE_RECIEVE];
-char response[BUFFER_SIZE_SEND];
+char buffer[BUFFER_SIZE];
+char response[RESPONSE_SIZE];
 int val_return;
 
-void syserr(char *messsage)
-{
+void syserr(char *messsage){
     perror(messsage);
 }
 
@@ -66,9 +65,9 @@ bool reading_client(){
 bool send_spend(struct user u1, int32_t amount){
     for(int i = 0; i < MAX_LIST_SIZE; i++){
         if(strcmp(a1.list_user[i].name, u1.name)){
-            a1.list_user[i].balance += (unsigned int)amount / 2;
-        }else{
             a1.list_user[i].balance -= (unsigned int)amount / 2;
+        }else{
+            a1.list_user[i].balance += (unsigned int)amount / 2;
         }
     }
     a1.total += amount;
@@ -181,35 +180,31 @@ int main(int argc, char *agrv[]){
             }else{
                 int j = 0;
                 int k = 0;
-                char temp[1024];
+                char temp[BUFFER_SIZE];
                 for(size_t i = 0; i < strlen(buffer); i++){
                     if(isspace(buffer[i])){
                         temp[i] = '\0';
                         strcpy(arguments[j], temp);
-                        for (size_t k = 0; k < 1024; k++){
+                        for (size_t k = 0; k < BUFFER_SIZE; k++){
                             temp[k] = '\0';
                         }
-                        k = -1;
+                        k =- 1;
                         j++;
                     }
                     temp[k] = buffer[i];
-                    if(buffer[i + 1] == '\0'){
-                        buffer[i + 1] = '\0';
+                    if(buffer[i+1] == '\0'){
+                        buffer[i+1] = '\0';
                         strcpy(arguments[j], temp);
                     }
                     k++;
                 }
-                printf("%s\n", arguments[0]);
-                printf("%s\n", arguments[1]);
-                printf("%s\n", arguments[2]);
-
+                bool find = false;
                 for(int i = 0; i < MAX_LIST_SIZE; i++){
                     if(strcmp(arguments[0], a1.list_user[i].name) == 0){
                         if(strcmp(arguments[1], "spend") == 0){
                             int amount;
                             amount = atoi(arguments[2]);
                             if(amount > 0){
-                                printf("call function spend\n");
                                 send_spend(a1.list_user[i], amount);
                                 memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
                                 printf("%s\n", response);
@@ -226,10 +221,30 @@ int main(int argc, char *agrv[]){
                             if(fflush(client_array[0].out)){
                                 syserr("error of fflush");
                             }
+                            for (size_t i = 0; i < RESPONSE_SIZE; i++){
+                                response[i] = '\0';
+                            }
+                            find = true;
+                            break;
                         }
                     }
                 }
-                
+                if(find == false){
+                    printf("user not found\n");
+                    memcpy(response, "user not found", strlen("user not found"));
+                    client_array[0].out = fdopen(client_array[0].fd, "w");
+                    size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out);
+                    if(nb_write < 0){
+                        syserr("error of fwrite");
+                        return 1;
+                    }
+                    if(fflush(client_array[0].out)){
+                        syserr("error of fflush");
+                    }
+                    for (size_t i = 0; i < RESPONSE_SIZE; i++){
+                        response[i] = '\0';
+                    }
+                }
             }
         }else{
             printf("unknown command\n");
