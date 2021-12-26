@@ -183,6 +183,9 @@ int main(int argc, char *agrv[]){
                 if(fflush(client_array[0].out)){
                     syserr("error of fflush");
                 }
+                for (size_t i = 0; i < RESPONSE_SIZE; i++){
+                    response[i] = '\0';
+                }
             }else{
                 int j = 0;
                 int k = 0;
@@ -204,7 +207,7 @@ int main(int argc, char *agrv[]){
                     }
                     k++;
                 }
-                bool find = false;
+
                 for(int i = 0; i < MAX_LIST_SIZE; i++){
                     if(strcmp(parsed[0], a1.list_user[i].name) == 0){
                         struct user temp = a1.list_user[i];
@@ -218,8 +221,7 @@ int main(int argc, char *agrv[]){
                             }else{
                                 memcpy(response, "Operation failed: the amount cannot be negative.", strlen("Operation failed: the amount cannot be negative."));
                                 printf("%s\n", response);
-                            }
-                            
+                            }   
                         }else if(strcmp(parsed[1], "refund") == 0){
                             amount = atoi(parsed[3]);
                             for(int i = 0; i < MAX_LIST_SIZE; i++){
@@ -232,40 +234,28 @@ int main(int argc, char *agrv[]){
                                         memcpy(response, "Operation failed: the amount cannot be negative.", strlen("Operation failed: the amount cannot be negative."));
                                         printf("%s\n", response);
                                     }
+                                    break;
+                                }else{
+                                    memcpy(response, "user not found", strlen("user not found"));
                                 }
                             } 
                         }
-                        client_array[0].out = fdopen(client_array[0].fd, "w");
-                            size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out); // sending the response to the client
-                            if(nb_write < 0){
-                                syserr("error of fwrite");
-                                return 1;
-                            }
-                            if(fflush(client_array[0].out)){
-                                syserr("error of fflush");
-                            }
-                            for (size_t i = 0; i < RESPONSE_SIZE; i++){
-                                response[i] = '\0';
-                            }
-                            find = true;
-                            break;
-                    }
+                        break;
+                    }else{
+                        memcpy(response, "user not found", strlen("user not found"));
+                    } 
                 }
-                if(find == false){
-                    printf("user not found\n");
-                    memcpy(response, "user not found", strlen("user not found"));
-                    client_array[0].out = fdopen(client_array[0].fd, "w");
-                    size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out);
-                    if(nb_write < 0){
-                        syserr("error of fwrite");
-                        return 1;
-                    }
-                    if(fflush(client_array[0].out)){
-                        syserr("error of fflush");
-                    }
-                    for (size_t i = 0; i < RESPONSE_SIZE; i++){
-                        response[i] = '\0';
-                    }
+                client_array[0].out = fdopen(client_array[0].fd, "w");
+                size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out); // sending the response to the client
+                if(nb_write < 0){
+                    syserr("error of fwrite");
+                    return 1;
+                }
+                if(fflush(client_array[0].out)){
+                    syserr("error of fflush");
+                }
+                for (size_t i = 0; i < RESPONSE_SIZE; i++){
+                    response[i] = '\0';
                 }
             }
         }else{
