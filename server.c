@@ -74,25 +74,31 @@ bool send_spend(struct user u1, int32_t amount){
     return false;
 }
 
-/* bool send_refund(struct user u1, struct user u2, int32_t amount){
-    if(amount < 0){
-        syserr("The amount must be positive");
-        return true;
-    }else{
-        u1.balance += amount/2;
-        u2.balance -= amount/2;
-        a1.total += amount;
+bool send_refund(struct user u1, struct user u2, int32_t amount){
+    struct user user_temp;
+    for(int i = 0; i < MAX_LIST_SIZE; i++){
+        if(strcmp(a1.list_user[i].name, u1.name) == 0){     
+            user_temp = a1.list_user[i]; 
+            for(int i = 0; i < MAX_LIST_SIZE; i++){
+                if(strcmp(a1.list_user[i].name, u2.name) == 0){
+                    user_temp.balance += (unsigned int)amount / 2;
+                    a1.list_user[i].balance -= (unsigned int)amount / 2;
+                }     
+            } 
+            a1.list_user[i] = user_temp; 
+        } 
     }
+    a1.total += amount;
     return false;
-} */
+}
 
 int main(int argc, char *agrv[]){
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     int yes = 1;
     int max = sock_fd;
     memset(clients, 1, sizeof(clients));
+    char parsed[1024][1024];
 
-    char arguments[1024][1024];
     /* USER */
     strcpy(u1.name, "foozy");
     u1.balance = 0;
@@ -184,7 +190,7 @@ int main(int argc, char *agrv[]){
                 for(size_t i = 0; i < strlen(buffer); i++){
                     if(isspace(buffer[i])){
                         temp[i] = '\0';
-                        strcpy(arguments[j], temp);
+                        strcpy(parsed[j], temp);
                         for (size_t k = 0; k < BUFFER_SIZE; k++){
                             temp[k] = '\0';
                         }
@@ -194,16 +200,17 @@ int main(int argc, char *agrv[]){
                     temp[k] = buffer[i];
                     if(buffer[i+1] == '\0'){
                         buffer[i+1] = '\0';
-                        strcpy(arguments[j], temp);
+                        strcpy(parsed[j], temp);
                     }
                     k++;
                 }
                 bool find = false;
                 for(int i = 0; i < MAX_LIST_SIZE; i++){
-                    if(strcmp(arguments[0], a1.list_user[i].name) == 0){
-                        if(strcmp(arguments[1], "spend") == 0){
-                            int amount;
-                            amount = atoi(arguments[2]);
+                    if(strcmp(parsed[0], a1.list_user[i].name) == 0){
+                        struct user temp = a1.list_user[i];
+                        int amount;
+                        if(strcmp(parsed[1], "spend") == 0){   
+                            amount = atoi(parsed[2]);
                             if(amount > 0){
                                 send_spend(a1.list_user[i], amount);
                                 memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
@@ -212,7 +219,23 @@ int main(int argc, char *agrv[]){
                                 memcpy(response, "Operation failed: the amount cannot be negative.", strlen("Operation failed: the amount cannot be negative."));
                                 printf("%s\n", response);
                             }
-                            client_array[0].out = fdopen(client_array[0].fd, "w");
+                            
+                        }else if(strcmp(parsed[1], "refund") == 0){
+                            amount = atoi(parsed[3]);
+                            for(int i = 0; i < MAX_LIST_SIZE; i++){
+                                if(strcmp(parsed[2], a1.list_user[i].name) == 0){
+                                    if(amount > 0){
+                                        send_refund(temp, a1.list_user[i], amount);
+                                        memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
+                                        printf("%s\n", response);
+                                    }else{
+                                        memcpy(response, "Operation failed: the amount cannot be negative.", strlen("Operation failed: the amount cannot be negative."));
+                                        printf("%s\n", response);
+                                    }
+                                }
+                            } 
+                        }
+                        client_array[0].out = fdopen(client_array[0].fd, "w");
                             size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out); // sending the response to the client
                             if(nb_write < 0){
                                 syserr("error of fwrite");
@@ -226,7 +249,6 @@ int main(int argc, char *agrv[]){
                             }
                             find = true;
                             break;
-                        }
                     }
                 }
                 if(find == false){

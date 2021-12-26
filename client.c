@@ -108,6 +108,16 @@ int main(int argc, char *argv[]){
             strcat(buffer, argv[3]);
             send_and_recieve(fdc);
             printf("%s\n", response);
+        }else if(strcmp(argv[2], "refund") == 0){
+            strcpy(buffer, argv[1]);
+            strcat(buffer, " ");
+            strcat(buffer, argv[2]);
+            strcat(buffer, " ");
+            strcat(buffer, argv[3]);
+            strcat(buffer, " ");
+            strcat(buffer, argv[4]);
+            send_and_recieve(fdc);
+            printf("%s\n", response);
         }else{
             printf("unknown command\n");
         }
