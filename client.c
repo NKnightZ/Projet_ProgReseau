@@ -38,6 +38,24 @@ void display_state_info(){
     printf("total: %d\n", a1.total);
 }
 
+bool send_and_recieve(FILE* file){
+    size_t nb_write = fwrite(buffer, sizeof(char), sizeof(buffer), file);
+    if(nb_write < 0){
+        syserr("error of fwrite");
+        return true;
+    }
+    if(fflush(file)){
+        syserr("error of fflush");
+        return true;
+    }
+    size_t nb_read = fread(response, sizeof(char), sizeof(response), file);
+    if(nb_read < 0){
+        syserr("error of fread");
+        return true;
+    }
+    return false;
+}
+
 // send_refund(from, source, amount)
 
 // send_spend(user, amount)
@@ -79,21 +97,8 @@ int main(int argc, char *argv[]){
     if(argc > 1 && argc <= 5){
         if(argc == 2 && strcmp(argv[1], "state") == 0){
             strcpy(buffer, argv[1]);
-            size_t nb_write = fwrite(buffer, sizeof(char), sizeof(buffer), fdc);
-            if(nb_write < 0){
-                syserr("error of fwrite");
-                return 1;
-            }
-            if(fflush(fdc)){
-                syserr("error of fflush");
-            }
-            size_t nb_read = fread(response, sizeof(char), sizeof(buffer), fdc);
-            if(nb_read < 0){
-                syserr("error of fread");
-                return 1;
-            }else{
-                memcpy(&a1, response, sizeof(a1));
-            }
+            send_and_recieve(fdc);
+            memcpy(&a1, response, sizeof(a1));
             display_state_info();
         }else if(strcmp(argv[2], "spend") == 0){
             strcpy(buffer, argv[1]);
@@ -101,19 +106,7 @@ int main(int argc, char *argv[]){
             strcat(buffer, argv[2]);
             strcat(buffer, " ");
             strcat(buffer, argv[3]);
-            size_t nb_write = fwrite(buffer, sizeof(char), sizeof(buffer), fdc);
-            if(nb_write < 0){
-                syserr("error of fwrite");
-                return 1;
-            }
-            if(fflush(fdc)){
-                syserr("error of fflush");
-            }
-            size_t nb_read = fread(response, sizeof(char), sizeof(response), fdc);
-            if(nb_read < 0){
-                syserr("error of fread");
-                return 1;
-            }
+            send_and_recieve(fdc);
             printf("%s\n", response);
         }else{
             printf("unknown command\n");
