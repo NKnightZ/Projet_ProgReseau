@@ -94,7 +94,7 @@ bool send_refund(struct user u1, struct user u2, int32_t amount){
 
 int main(int argc, char *agrv[]){
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    int yes = 1;
+    // int yes = 1;
     int max = sock_fd;
     memset(clients, 1, sizeof(clients));
     char parsed[1024][1024];
@@ -123,10 +123,10 @@ int main(int argc, char *agrv[]){
     server.sin_port = htons(PORT);
     server.sin_family = AF_INET;
 
-    if(setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1){ // à retirer, pas sur un projet final
+   /* if(setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1){ // à retirer, pas sur un projet final
         syserr("setsockopt");
         return 1;
-    }
+    } */
 
     if(bind(sock_fd, (struct sockaddr *)&server, sizeof(server)) == -1){
         syserr("Error with binding of socket\n");
@@ -219,7 +219,7 @@ int main(int argc, char *agrv[]){
                                 memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
                                 printf("%s\n", response);
                             }else{
-                                memcpy(response, "Operation failed: the amount cannot be negative.", strlen("Operation failed: the amount cannot be negative."));
+                                memcpy(response, "Operation failed.", strlen("Operation failed."));
                                 printf("%s\n", response);
                             }   
                         }else if(strcmp(parsed[1], "refund") == 0){
@@ -231,7 +231,7 @@ int main(int argc, char *agrv[]){
                                         memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
                                         printf("%s\n", response);
                                     }else{
-                                        memcpy(response, "Operation failed: the amount cannot be negative.", strlen("Operation failed: the amount cannot be negative."));
+                                        memcpy(response, "Operation failed.", strlen("Operation failed."));
                                         printf("%s\n", response);
                                     }
                                     break;

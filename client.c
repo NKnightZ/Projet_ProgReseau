@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
             send_and_recieve(fdc);
             memcpy(&a1, response, sizeof(a1));
             display_state_info();
-        }else if(strcmp(argv[2], "spend") == 0){
+        }else if(argc == 4 && strcmp(argv[2], "spend") == 0){
             strcpy(buffer, argv[1]);
             strcat(buffer, " ");
             strcat(buffer, argv[2]);
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]){
             strcat(buffer, argv[3]);
             send_and_recieve(fdc);
             printf("%s\n", response);
-        }else if(strcmp(argv[2], "refund") == 0){
+        }else if(argc == 5 && strcmp(argv[2], "refund") == 0){
             strcpy(buffer, argv[1]);
             strcat(buffer, " ");
             strcat(buffer, argv[2]);
