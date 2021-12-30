@@ -97,7 +97,9 @@ int main(int argc, char *argv[]){
     if(argc > 1 && argc <= 5){
         if(argc == 2 && strcmp(argv[1], "state") == 0){
             strcpy(buffer, argv[1]);
-            send_and_recieve(fdc);
+            if(send_and_recieve(fdc)){
+                return 1;
+            }
             memcpy(&a1, response, sizeof(a1));
             display_state_info();
         }else if(argc == 4 && strcmp(argv[2], "spend") == 0){
@@ -106,7 +108,9 @@ int main(int argc, char *argv[]){
             strcat(buffer, argv[2]);
             strcat(buffer, " ");
             strcat(buffer, argv[3]);
-            send_and_recieve(fdc);
+            if(send_and_recieve(fdc)){
+                return 1;
+            }
             printf("%s\n", response);
         }else if(argc == 5 && strcmp(argv[2], "refund") == 0){
             strcpy(buffer, argv[1]);
@@ -116,7 +120,9 @@ int main(int argc, char *argv[]){
             strcat(buffer, argv[3]);
             strcat(buffer, " ");
             strcat(buffer, argv[4]);
-            send_and_recieve(fdc);
+            if(send_and_recieve(fdc)){
+                return 1;
+            }
             printf("%s\n", response);
         }else{
             printf("unknown command\n");

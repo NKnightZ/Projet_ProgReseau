@@ -92,6 +92,22 @@ bool send_refund(struct user u1, struct user u2, int32_t amount){
     return false;
 }
 
+bool send_client(FILE* f){
+    size_t nb_write = fwrite(response, sizeof(char), sizeof(response), f); // sending the response to the client
+    if(nb_write < 0){
+        syserr("error of fwrite");
+        return true;
+    }
+    if(fflush(f)){
+        syserr("error of fflush");
+        return true;
+    }
+    for (size_t i = 0; i < RESPONSE_SIZE; i++){
+        response[i] = '\0';
+    }
+    return false;
+}
+
 int main(int argc, char *agrv[]){
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     // int yes = 1;
@@ -175,16 +191,8 @@ int main(int argc, char *agrv[]){
                 }
                 printf("sending the state of account...\n");
                 memcpy(response, &a1, sizeof(a1));
-                size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out);
-                if(nb_write < 0){
-                    syserr("error of fwrite");
+                if(send_client(client_array[0].out)){
                     return 1;
-                }
-                if(fflush(client_array[0].out)){
-                    syserr("error of fflush");
-                }
-                for (size_t i = 0; i < RESPONSE_SIZE; i++){
-                    response[i] = '\0';
                 }
             }else{
                 int j = 0;
@@ -207,7 +215,6 @@ int main(int argc, char *agrv[]){
                     }
                     k++;
                 }
-
                 for(int i = 0; i < MAX_LIST_SIZE; i++){
                     if(strcmp(parsed[0], a1.list_user[i].name) == 0){
                         struct user temp = a1.list_user[i];
@@ -246,16 +253,8 @@ int main(int argc, char *agrv[]){
                     } 
                 }
                 client_array[0].out = fdopen(client_array[0].fd, "w");
-                size_t nb_write = fwrite(response, sizeof(char), sizeof(response), client_array[0].out); // sending the response to the client
-                if(nb_write < 0){
-                    syserr("error of fwrite");
+                if(send_client(client_array[0].out)){
                     return 1;
-                }
-                if(fflush(client_array[0].out)){
-                    syserr("error of fflush");
-                }
-                for (size_t i = 0; i < RESPONSE_SIZE; i++){
-                    response[i] = '\0';
                 }
             }
         }else{
