@@ -1,5 +1,4 @@
 .vscode/settings.json
-client
-client.o
+*.o
+tricount
 server
-server.o

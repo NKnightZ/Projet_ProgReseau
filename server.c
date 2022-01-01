@@ -62,7 +62,7 @@ bool reading_client(){
     return false;
 }
 
-bool send_spend(struct user u1, int32_t amount){
+void send_spend(struct user u1, int32_t amount){
     for(int i = 0; i < MAX_LIST_SIZE; i++){
         if(strcmp(a1.list_user[i].name, u1.name)){
             a1.list_user[i].balance -= (unsigned int)amount / 2;
@@ -71,10 +71,9 @@ bool send_spend(struct user u1, int32_t amount){
         }
     }
     a1.total += amount;
-    return false;
 }
 
-bool send_refund(struct user u1, struct user u2, int32_t amount){
+void send_refund(struct user u1, struct user u2, int32_t amount){
     struct user user_temp;
     for(int i = 0; i < MAX_LIST_SIZE; i++){
         if(strcmp(a1.list_user[i].name, u1.name) == 0){     
@@ -89,7 +88,6 @@ bool send_refund(struct user u1, struct user u2, int32_t amount){
         } 
     }
     a1.total += amount;
-    return false;
 }
 
 bool send_client(FILE* f){
@@ -110,10 +108,10 @@ bool send_client(FILE* f){
 
 int main(int argc, char *agrv[]){
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
-    // int yes = 1;
     int max = sock_fd;
+
     memset(clients, 1, sizeof(clients));
-    char parsed[1024][1024];
+    char parsed[BUFFER_SIZE][BUFFER_SIZE];
 
     /* USER */
     strcpy(u1.name, "foozy");
@@ -139,11 +137,6 @@ int main(int argc, char *agrv[]){
     server.sin_port = htons(PORT);
     server.sin_family = AF_INET;
 
-   /* if(setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1){ // à retirer, pas sur un projet final
-        syserr("setsockopt");
-        return 1;
-    } */
-
     if(bind(sock_fd, (struct sockaddr *)&server, sizeof(server)) == -1){
         syserr("Error with binding of socket\n");
         return 1;
@@ -162,7 +155,7 @@ int main(int argc, char *agrv[]){
 
     while(true){
         fd_set set;
-        FD_ZERO(&set); // clean the set
+        FD_ZERO(&set);
         FD_SET(sock_fd, &set);
 
         for(int i = 0; i < MAX_CLIENTS; i++){
@@ -180,6 +173,9 @@ int main(int argc, char *agrv[]){
 
         if(FD_ISSET(sock_fd, &set)){
             accept_client();
+        }else{
+            syserr("error of accept client");
+            return 1;
         }
 
         if(reading_client() == false){
@@ -195,6 +191,7 @@ int main(int argc, char *agrv[]){
                     return 1;
                 }
             }else{
+                /* PARSING */
                 int j = 0;
                 int k = 0;
                 char temp[BUFFER_SIZE];

@@ -1,13 +1,13 @@
-TARGET=client server
+TARGET=tricount server
 CFLAGS= -g -Wall -Werror -Wconversion
 
-all: client server
+all: tricount server
 
-client: client.o
+tricount: tricount.o
 
 server: server.o
 
-client.o: client.c 
+tricount.o: tricount.c 
 
 server.o: server.c struct_server.h
 
