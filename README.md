@@ -20,5 +20,3 @@ pour lancer le client il y a 3 commandes i.e le client peut envoyer 3 paquets:
 ```sh
 ./tricount state
 ```
-
-une fois un client accepté on a la possibilité d'arreter le serveur en tapant la commande `stop`
