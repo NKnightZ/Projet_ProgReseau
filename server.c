@@ -40,14 +40,13 @@ bool accept_client(){
 }
 
 bool reading_client(){
-    size_t nbread;
     client_array[0].in = fdopen(client_array[0].fd, "r");
     if(client_array[0].in == NULL){
         syserr("error of fdopen");
         return true;
     }
-    nbread = fread(buffer, sizeof(char), 1024, client_array[0].in);
-    if(nbread < 1){
+    size_t nb_read = fread(buffer, sizeof(char), 1024, client_array[0].in);
+    if(nb_read < 1){
         syserr("error of fread");
         return true;
     }
@@ -270,11 +269,6 @@ int main(int argc, char *agrv[]){
             }
         }else{
             printf("unknown command\n");
-        }
-        scanf("%s", agrv[0]);
-        if(strcmp(agrv[0], "stop") == 0){
-            printf("stopping of server..\n");
-            return 0;
         }
     }
     if(fclose(client_array[0].in) != 0){
