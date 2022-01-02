@@ -131,9 +131,5 @@ int main(int argc, char *argv[]){
         syserr("Error of fclose fd");
         return 1;
     }
-    if(close(sock_fd)){
-        syserr("error of close socket");
-        return 1;
-    }
     return 0;
 }

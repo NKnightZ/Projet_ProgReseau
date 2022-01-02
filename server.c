@@ -55,6 +55,7 @@ bool reading_client(){
     client_array[0].in = fdopen(client_array[0].fd, "r");
     if(client_array[0].in == NULL){
         syserr("error of fdopen");
+        fclose(client_array[0].in);
         return true;
     }
     nbread = fread(buffer, sizeof(char), 1024, client_array[0].in);
@@ -66,9 +67,9 @@ bool reading_client(){
     return false;
 }
 
-void send_spend(struct user u, int32_t amount){
+void send_spend(struct user *user_source, int32_t amount){
     for(int i = 0; i < MAX_LIST_SIZE; i++){
-        if(strcmp(a1.list_user[i].name, u.name)){
+        if(strcmp(a1.list_user[i].name, user_source->name)){
             a1.list_user[i].balance -= (unsigned int)amount / (unsigned int)nb_user_account;
         }else{
             a1.list_user[i].balance += (unsigned int)amount - ((unsigned int)amount / (unsigned int)nb_user_account);
@@ -77,13 +78,13 @@ void send_spend(struct user u, int32_t amount){
     a1.total += amount;
 }
 
-void send_refund(struct user u1, struct user u2, int32_t amount){
+void send_refund(struct user *user_from, struct user *user_source, int32_t amount){
     struct user user_temp;
     for(int i = 0; i < MAX_LIST_SIZE; i++){
-        if(strcmp(a1.list_user[i].name, u1.name) == 0){     
+        if(strcmp(a1.list_user[i].name, user_source->name) == 0){     
             user_temp = a1.list_user[i]; 
             for(int i = 0; i < MAX_LIST_SIZE; i++){
-                if(strcmp(a1.list_user[i].name, u2.name) == 0){
+                if(strcmp(a1.list_user[i].name, user_from->name) == 0){
                     user_temp.balance += (unsigned int)amount;
                     a1.list_user[i].balance -= (unsigned int)amount;
                 }     
@@ -231,12 +232,12 @@ int main(int argc, char *agrv[]){
                 }
                 for(int i = 0; i < MAX_LIST_SIZE; i++){
                     if(strcmp(parsed[0], a1.list_user[i].name) == 0){
-                        struct user temp = a1.list_user[i];
+                        struct user user_source = a1.list_user[i];
                         int amount;
                         if(strcmp(parsed[1], "spend") == 0){   
                             amount = atoi(parsed[2]);
                             if(amount > 0){
-                                send_spend(a1.list_user[i], amount);
+                                send_spend(&user_source, amount);
                                 memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
                                 printf("%s\n", response);
                             }else{
@@ -247,8 +248,9 @@ int main(int argc, char *agrv[]){
                             amount = atoi(parsed[3]);
                             for(int i = 0; i < MAX_LIST_SIZE; i++){
                                 if(strcmp(parsed[2], a1.list_user[i].name) == 0){
+                                    struct user user_from = a1.list_user[i];
                                     if(amount > 0){
-                                        send_refund(temp, a1.list_user[i], amount);
+                                        send_refund(&user_from, &user_source, amount);
                                         memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
                                         printf("%s\n", response);
                                     }else{
