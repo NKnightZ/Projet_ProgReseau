@@ -1,0 +1,5 @@
+Bugs connus:
+- problème d'acceptation d'un client avec netcat: 
+le serveur bloque en acceptant une connexion netcat (avec nc localhost 8080) donc à cause de cela le serveur ne peut plus accepter d'autre client
+
+- tant que le serveur n'a accepté aucun client: en tapant n'importe qu'elle touche au clavier coté serveur cela cause l'arret du serveur (avec le message venant de syserr("error of accept client")), sinon si un client est accepté pour arreter le client il suffit de taperr "stop"

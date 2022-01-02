@@ -1,15 +1,4 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include "struct_server.h"
-
-#define PORT 8080
+#include "tricount.h"
 
 struct account a1;
 
@@ -22,7 +11,7 @@ void syserr(char *message) {
 
 void display_state_info(){
     printf("\n");
-    printf("account title: %s\n", a1.title);
+    printf("Account title: %s\n", a1.title);
     int nb_user = 0;
     for(int i = 0; i < MAX_LIST_SIZE; i++){
         if(strcmp(a1.list_user[i].name, "\0")){
@@ -36,7 +25,7 @@ void display_state_info(){
         printf("balance: %d\n", a1.list_user[i].balance);
     }
     printf("\n");
-    printf("total: %d\n", a1.total);
+    printf("Total: %d\n", a1.total);
 }
 
 bool send_and_recieve(FILE *file){
@@ -125,9 +114,9 @@ int main(int argc, char *argv[]){
             printf("unknown command\n");
         }
     }else{
-        printf("too much arguments, nothing will be send\n");
+        printf("error with the number of argument, nothing will be send\n");
     }
-    if(fclose(fd) == EOF){
+    if(fclose(fd) != 0){
         syserr("Error of fclose fd");
         return 1;
     }

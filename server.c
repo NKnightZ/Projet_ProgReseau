@@ -1,15 +1,4 @@
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdbool.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include "struct_server.h"
-
-#define PORT 8080
+#include "server.h"
 
 struct user u1;
 struct user u2;
@@ -31,8 +20,8 @@ char buffer[BUFFER_SIZE];
 char response[RESPONSE_SIZE];
 int val_return;
 
-void syserr(char *messsage){
-    perror(messsage);
+void syserr(char *message){
+    perror(message);
 }
 
 bool accept_client(){
@@ -55,14 +44,28 @@ bool reading_client(){
     client_array[0].in = fdopen(client_array[0].fd, "r");
     if(client_array[0].in == NULL){
         syserr("error of fdopen");
-        fclose(client_array[0].in);
         return true;
     }
     nbread = fread(buffer, sizeof(char), 1024, client_array[0].in);
     if(nbread < 1){
         syserr("error of fread");
-        fclose(client_array[0].in);
         return true;
+    }
+    return false;
+}
+
+bool send_client(FILE *f){
+    size_t nb_write = fwrite(response, sizeof(char), sizeof(response), f); // sending the response to the client
+    if(nb_write < 0){
+        syserr("error of fwrite");
+        return true;
+    }
+    if(fflush(f)){
+        syserr("error of fflush");
+        return true;
+    }
+    for (size_t i = 0; i < RESPONSE_SIZE; i++){
+        response[i] = '\0';
     }
     return false;
 }
@@ -94,22 +97,6 @@ void send_refund(struct user *user_from, struct user *user_source, int32_t amoun
     }
 }
 
-bool send_client(FILE *f){
-    size_t nb_write = fwrite(response, sizeof(char), sizeof(response), f); // sending the response to the client
-    if(nb_write < 0){
-        syserr("error of fwrite");
-        return true;
-    }
-    if(fflush(f)){
-        syserr("error of fflush");
-        return true;
-    }
-    for (size_t i = 0; i < RESPONSE_SIZE; i++){
-        response[i] = '\0';
-    }
-    return false;
-}
-
 int main(int argc, char *agrv[]){
     sock_fd = socket(AF_INET, SOCK_STREAM, 0);
     int max = sock_fd;
@@ -124,10 +111,10 @@ int main(int argc, char *agrv[]){
     strcpy(u2.name, "barry");
     u2.balance = 0;
 
-    strcpy(u3.name, "Abou");
+    strcpy(u3.name, "Damien");
     u3.balance = 0;
     
-    strcpy(u4.name, "toto");
+    strcpy(u4.name, "Mike");
     u4.balance = 0;
 
     /* ACCOUNT */
@@ -206,6 +193,7 @@ int main(int argc, char *agrv[]){
                 printf("sending the state of account...\n");
                 memcpy(response, &a1, sizeof(a1));
                 if(send_client(client_array[0].out)){
+                    printf("error of sending..\n");
                     return 1;
                 }
             }else{
@@ -237,6 +225,7 @@ int main(int argc, char *agrv[]){
                         if(strcmp(parsed[1], "spend") == 0){   
                             amount = atoi(parsed[2]);
                             if(amount > 0){
+                                printf("A user do a spend\n");
                                 send_spend(&user_source, amount);
                                 memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
                                 printf("%s\n", response);
@@ -250,6 +239,7 @@ int main(int argc, char *agrv[]){
                                 if(strcmp(parsed[2], a1.list_user[i].name) == 0){
                                     struct user user_from = a1.list_user[i];
                                     if(amount > 0){
+                                        printf("A user do a refund\n");
                                         send_refund(&user_from, &user_source, amount);
                                         memcpy(response, "Operation sucessful !", strlen("Operation sucessful !"));
                                         printf("%s\n", response);
@@ -269,19 +259,29 @@ int main(int argc, char *agrv[]){
                     } 
                 }
                 client_array[0].out = fdopen(client_array[0].fd, "w");
+                if(client_array[0].out == NULL){
+                    syserr("error of fdopen");
+                    return 1;
+                }
                 if(send_client(client_array[0].out)){
+                    printf("error of sending..\n");
                     return 1;
                 }
             }
         }else{
             printf("unknown command\n");
         }
+        scanf("%s", agrv[0]);
+        if(strcmp(agrv[0], "stop") == 0){
+            printf("stopping of server..\n");
+            return 0;
+        }
     }
-    if(fclose(client_array[0].in) == EOF){
+    if(fclose(client_array[0].in) != 0){
         syserr("Error of fclose in");
         return 1;
     }
-    if(fclose(client_array[0].out) == EOF){
+    if(fclose(client_array[0].out) != 0){
         syserr("Error of fclose out");
         return 1;
     }
