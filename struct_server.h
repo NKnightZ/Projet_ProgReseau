@@ -13,8 +13,8 @@ struct user{
 
 struct client{
     int fd;
-    FILE* in;
-    FILE* out;
+    FILE *in;
+    FILE *out;
 };
 
 struct account {

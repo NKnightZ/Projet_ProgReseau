@@ -80,11 +80,14 @@ bool serialise(char *buff, int buff_len, struct account *acc){
 -   rembourser
 -   depenser
 -   voir l'etat des comptes
-
 Serveur peut envoyer 1 paquet : 
 -   savoir l'etat des comptes par le serveur et l'envoyer au client
 
 // pas de creation de compte, pas rejoindre un compte de server */
+
+// send_refund(from, source, amount)
+
+// send_spend(user, amount)
 
 Maquette: 
 #define MAX_CLIENT_NAME_LENGTH 120

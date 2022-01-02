@@ -35,10 +35,11 @@ void display_state_info(){
         printf("name: %s\n", a1.list_user[i].name);
         printf("balance: %d\n", a1.list_user[i].balance);
     }
+    printf("\n");
     printf("total: %d\n", a1.total);
 }
 
-bool send_and_recieve(FILE* file){
+bool send_and_recieve(FILE *file){
     size_t nb_write = fwrite(buffer, sizeof(char), sizeof(buffer), file);
     if(nb_write < 0){
         syserr("error of fwrite");
@@ -55,10 +56,6 @@ bool send_and_recieve(FILE* file){
     }
     return false;
 }
-
-// send_refund(from, source, amount)
-
-// send_spend(user, amount)
 
 int main(int argc, char *argv[]){
     int sock_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -87,9 +84,9 @@ int main(int argc, char *argv[]){
         printf("Connection successful !\n");
     }
     
-    FILE* fdc = fdopen(sock_fd, "w+");
+    FILE *fd = fdopen(sock_fd, "w+");
 
-    if(fdc == NULL){
+    if(fd == NULL){
         syserr("error of fdopen");
         return 1;
     }
@@ -97,7 +94,7 @@ int main(int argc, char *argv[]){
     if(argc > 1 && argc <= 5){
         if(argc == 2 && strcmp(argv[1], "state") == 0){
             strcpy(buffer, argv[1]);
-            if(send_and_recieve(fdc)){
+            if(send_and_recieve(fd)){
                 return 1;
             }
             memcpy(&a1, response, sizeof(a1));
@@ -108,7 +105,7 @@ int main(int argc, char *argv[]){
             strcat(buffer, argv[2]);
             strcat(buffer, " ");
             strcat(buffer, argv[3]);
-            if(send_and_recieve(fdc)){
+            if(send_and_recieve(fd)){
                 return 1;
             }
             printf("%s\n", response);
@@ -120,7 +117,7 @@ int main(int argc, char *argv[]){
             strcat(buffer, argv[3]);
             strcat(buffer, " ");
             strcat(buffer, argv[4]);
-            if(send_and_recieve(fdc)){
+            if(send_and_recieve(fd)){
                 return 1;
             }
             printf("%s\n", response);
@@ -130,7 +127,13 @@ int main(int argc, char *argv[]){
     }else{
         printf("too much arguments, nothing will be send\n");
     }
-    fclose(fdc);
-    close(sock_fd);
+    if(fclose(fd) == EOF){
+        syserr("Error of fclose fd");
+        return 1;
+    }
+    if(close(sock_fd)){
+        syserr("error of close socket");
+        return 1;
+    }
     return 0;
 }

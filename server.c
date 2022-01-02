@@ -13,6 +13,10 @@
 
 struct user u1;
 struct user u2;
+struct user u3;
+struct user u4;
+
+int nb_user_account;
 
 struct account a1;
 
@@ -62,12 +66,12 @@ bool reading_client(){
     return false;
 }
 
-void send_spend(struct user u1, int32_t amount){
+void send_spend(struct user u, int32_t amount){
     for(int i = 0; i < MAX_LIST_SIZE; i++){
-        if(strcmp(a1.list_user[i].name, u1.name)){
-            a1.list_user[i].balance -= (unsigned int)amount / 2;
+        if(strcmp(a1.list_user[i].name, u.name)){
+            a1.list_user[i].balance -= (unsigned int)amount / (unsigned int)nb_user_account;
         }else{
-            a1.list_user[i].balance += (unsigned int)amount / 2;
+            a1.list_user[i].balance += (unsigned int)amount - ((unsigned int)amount / (unsigned int)nb_user_account);
         }
     }
     a1.total += amount;
@@ -80,17 +84,16 @@ void send_refund(struct user u1, struct user u2, int32_t amount){
             user_temp = a1.list_user[i]; 
             for(int i = 0; i < MAX_LIST_SIZE; i++){
                 if(strcmp(a1.list_user[i].name, u2.name) == 0){
-                    user_temp.balance += (unsigned int)amount / 2;
-                    a1.list_user[i].balance -= (unsigned int)amount / 2;
+                    user_temp.balance += (unsigned int)amount;
+                    a1.list_user[i].balance -= (unsigned int)amount;
                 }     
             } 
             a1.list_user[i] = user_temp; 
         } 
     }
-    a1.total += amount;
 }
 
-bool send_client(FILE* f){
+bool send_client(FILE *f){
     size_t nb_write = fwrite(response, sizeof(char), sizeof(response), f); // sending the response to the client
     if(nb_write < 0){
         syserr("error of fwrite");
@@ -120,11 +123,25 @@ int main(int argc, char *agrv[]){
     strcpy(u2.name, "barry");
     u2.balance = 0;
 
+    strcpy(u3.name, "Abou");
+    u3.balance = 0;
+    
+    strcpy(u4.name, "toto");
+    u4.balance = 0;
+
     /* ACCOUNT */
-    strcpy(a1.title, "account 1");
+    strcpy(a1.title, "travel");
     a1.list_user[0] = u1;
     a1.list_user[1] = u2;
+    a1.list_user[2] = u3;
+    a1.list_user[3] = u4;
     a1.total = 0;
+
+    for(int i = 0; i < MAX_LIST_SIZE; i++){
+        if(strcmp(a1.list_user[i].name, "\0")){
+            nb_user_account++;
+        }
+    }
 
     if(sock_fd == -1){
         syserr("Error with creation of socket\n");
@@ -202,7 +219,7 @@ int main(int argc, char *agrv[]){
                         for (size_t k = 0; k < BUFFER_SIZE; k++){
                             temp[k] = '\0';
                         }
-                        k =- 1;
+                        k = -1;
                         j++;
                     }
                     temp[k] = buffer[i];
@@ -258,8 +275,17 @@ int main(int argc, char *agrv[]){
             printf("unknown command\n");
         }
     }
-    fclose(client_array[0].in);
-    fclose(client_array[0].out);
-    close(sock_fd);
+    if(fclose(client_array[0].in) == EOF){
+        syserr("Error of fclose in");
+        return 1;
+    }
+    if(fclose(client_array[0].out) == EOF){
+        syserr("Error of fclose out");
+        return 1;
+    }
+    if(close(sock_fd)){
+        syserr("error of close socket");
+        return 1;
+    }
     return 0;
 }
